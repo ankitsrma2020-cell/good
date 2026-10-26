@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import type { AppDispatch, RootState } from '../redux/types/index.ts'
 import { changePasswordRequested, profileUpdateRequested } from '../redux/actions/index.ts'
 import { getUserDisplayName } from './profileUtils.ts'
+import Button from './Button.tsx'
 
 const maxImageSize = 2 * 1024 * 1024
 const supportedImageTypes = ['image/jpeg', 'image/png', 'image/webp']
@@ -65,7 +66,7 @@ function ProfileDialog({ onClose }: { onClose: () => void }) {
         <div className="dashboard-image-upload">
           {profileImage ? <img className="dashboard-profile-preview" src={profileImage} alt="Selected profile preview" /> : <span className="dashboard-profile-preview dashboard-profile-placeholder"><ImagePlus size={24} /></span>}
           <div>
-            <button className="dashboard-button secondary" type="button" onClick={() => fileInputRef.current?.click()}><ImagePlus size={16} />Choose image</button>
+            <Button className="dashboard-button" variant="secondary" type="button" onClick={() => fileInputRef.current?.click()}><ImagePlus size={16} />Choose image</Button>
             <input ref={fileInputRef} className="dashboard-file-input" type="file" accept="image/jpeg,image/png,image/webp" onChange={handleImageChange} />
             <small className="dashboard-upload-hint">JPEG, PNG, or WebP up to 2 MB</small>
           </div>
@@ -75,7 +76,7 @@ function ProfileDialog({ onClose }: { onClose: () => void }) {
         <label htmlFor="dashboard-profile-email">Email<input id="dashboard-profile-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label>
         {profileError && <p className="dashboard-form-error" role="alert">{profileError}</p>}
         {profileStatus === 'succeeded' && <p className="dashboard-form-success" role="status">Profile updated successfully.</p>}
-        <div className="dashboard-modal-actions"><button className="dashboard-button secondary" type="button" onClick={onClose}>Cancel</button><button className="dashboard-button" type="submit" disabled={profileStatus === 'loading'}>{profileStatus === 'loading' ? 'Saving...' : 'Save Changes'}</button></div>
+        <div className="dashboard-modal-actions"><Button className="dashboard-button" variant="secondary" type="button" onClick={onClose}>Cancel</Button><Button className="dashboard-button" type="submit" loading={profileStatus === 'loading'} loadingText="Saving...">Save Changes</Button></div>
       </form>
     </DialogShell>
   )
@@ -106,7 +107,7 @@ function PasswordDialog({ onClose }: { onClose: () => void }) {
         <label htmlFor="dashboard-confirm-password">Confirm Password<input id="dashboard-confirm-password" type="password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} required /></label>
         {(validationError || passwordError) && <p className="dashboard-form-error" role="alert">{validationError || passwordError}</p>}
         {passwordStatus === 'succeeded' && <p className="dashboard-form-success" role="status">Password changed successfully.</p>}
-        <div className="dashboard-modal-actions"><button className="dashboard-button secondary" type="button" onClick={onClose}>Cancel</button><button className="dashboard-button" type="submit" disabled={passwordStatus === 'loading'}>{passwordStatus === 'loading' ? 'Changing...' : 'Change Password'}</button></div>
+        <div className="dashboard-modal-actions"><Button className="dashboard-button" variant="secondary" type="button" onClick={onClose}>Cancel</Button><Button className="dashboard-button" type="submit" loading={passwordStatus === 'loading'} loadingText="Changing...">Change Password</Button></div>
       </form>
     </DialogShell>
   )
