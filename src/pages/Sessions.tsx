@@ -64,7 +64,12 @@ function SessionsContent() {
 
   return (
     <main className="sessions-page">
-      <DashboardNavader>
+      <DashboardNavbar user={user} activePage="sessions" onViewProfile={() => setProfileOpen(true)} onUpdateProfile={() => setProfileOpen(true)} onChangePassword={() => setPasswordOpen(true)} onLogout={handleLogout} />
+      <div className="sessions-content">
+        <header className="sessions-heading">
+          <div><h1>Session Monitor</h1><p>Monitor active user sessions and recent login activity.</p></div>
+          <button className="sessions-refresh" type="button" onClick={() => setRefreshedAt(new Date())}><RefreshCw size={16} />Refresh Sessions</button>
+        </header>
 
         <section className="sessions-summary" aria-label="Session summary">
           <SummaryCard icon={<Wifi size={20} />} label="Active Sessions" value={activeCount} tone="blue" />
