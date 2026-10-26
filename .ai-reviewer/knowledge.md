@@ -1,31 +1,27 @@
 # good reviewer notes
 
 ## Architecture
-
-This is a Vite React/TypeScript frontend with Redux-based authentication/state management and an Express/Mongoose backend. The frontend uses pathname-based rendering in `src/App.tsx` rather than a routing library, while backend authentication endpoints are grouped under `/api/auth` in `backend/src/routes/authRoutes.ts`. The backend connects to MongoDB before listening and exposes JSON APIs with centralized 404 and error handling in `backend/src/server.ts`.
+This is a Vite React 19 frontend with Redux-based application state and a separately packaged Express/TypeScript backend. The frontend entry point (`src/App.tsx`) selects pages directly from `window.location.pathname`; the backend exposes authentication and user-management endpoints under `/api/auth`, backed by MongoDB/Mongoose. Authentication uses JWTs stored client-side and sent as Bearer tokens.
 
 ## Conventions
-
-- Use TypeScript strict mode; backend source is under `backend/src`, frontend source under `src`. Backend compilation is configured in `backend/tsconfig.json`.
-- Backend ES module imports include `.js` extensions, even in `.ts` files, e.g. `backend/src/server.ts` and `backend/src/routes/authRoutes.ts`, matching `module: "NodeNext"`.
-- API responses consistently use `{ success: boolean, ... }`; validation and operational failures return structured JSON messages. Follow the patterns in `backend/src/routes/authRoutes.ts`.
-- Protected backend routes apply `authenticateToken` directly in the route declaration, and handlers read the authenticated identity from `request.userId` (`backend/src/middleware/authMiddleware.ts`).
-- Passwords must never be returned from user responses. Existing queries explicitly use `.select("-password")` or allowlisted fields, and `publicUser()` in `backend/src/routes/authRoutes.ts` defines the public representation.
-- Normalize account emails with `trim().toLowerCase()` before lookup or persistence. User names are trimmed; the schema also enforces `trim` and email `lowercase` (`backend/src/models/User.ts`).
-- Hash passwords with bcrypt using the module-level `saltRounds = 10`; compare hashes with `bcrypt.compare` (`backend/src/routes/authRoutes.ts`).
-- Frontend Redux access uses typed hooks/types such as `AppDispatch` and `RootState` (`src/App.tsx`, `src/components/AccountDialogs.tsx`). Async operations are dispatched as request actions such as `profileUpdateRequested`.
-- Frontend pages are selected by exact `window.location.pathname` checks in `src/App.tsx`; navigation uses ordinary links like those in `src/components/DashboardNavbar.tsx`.
-- UI styling follows component-specific `dashboard-*` class names, and reusable dashboard controls are split into components such as `DashboardNavbar.tsx`, `AccountDialogs.tsx`, and `ProfileAvatar.tsx`.
+- Backend TypeScript is strict and uses ESM/NodeNext. Relative imports in `backend/src` must include `.js` extensions, even when importing `.ts` sources; see `backend/src/routes/authRoutes.ts`.
+- API responses consistently use `{ success, message, ... }` envelopes. Validation failures use 400, authentication failures 401, authorization failures 403, conflicts 409, and missing records 404; follow examples in `backend/src/routes/authRoutes.ts`.
+- Protected backend handlers use `authenticateToken` and `AuthenticatedRequest.userId` from `backend/src/middleware/authMiddleware.ts`. Authorization must be checked against that ID, not merely the URL parameter; account deletion demonstrates this.
+- User emails are trimmed and lowercased before lookup or persistence. Names are trimmed, and passwords are hashed with bcrypt using `saltRounds = 10`; see `backend/src/routes/authRoutes.ts` and `backend/src/models/User.ts`.
+- Never return password fields. Queries explicitly select safe fields or `-password`, and `publicUser()` centralizes the public representation (`backend/src/routes/authRoutes.ts`).
+- Frontend components use PascalCase files and default exports (`src/components/Button.tsx`, `src/components/AccountDialogs.tsx`). Redux hooks are typed with `AppDispatch` and `RootState`.
+- Frontend styling is class-name based; component-specific classes use the relevant feature prefix, such as `dashboard-*` in `src/components/AccountDialogs.tsx`.
+- New frontend page paths must be added explicitly to the pathname dispatch in `src/App.tsx`; there is no router configured in the sampled code.
 
 ## Intentional non-standard choices
-
-- There is no React Router: `src/App.tsx` intentionally implements simple pathname-based navigation for `/dashboard`, `/users`, `/activity`, `/leaderboard`, and `/sessions`.
-- Profile images are intentionally stored as validated base64 data URLs in MongoDB rather than uploaded as files. Both frontend and backend enforce JPEG/PNG/WebP and a 2 MB limit (`src/components/AccountDialogs.tsx`, `backend/src/routes/authRoutes.ts`).
+- Authentication state currently lives in a slice named `signupSlice`; `src/App.tsx` and `src/components/AccountDialogs.tsx` both use `state.signup`. Do not flag this naming unless renaming the slice and all dependent actions/selectors.
+- The backend calls `dns.setServers(["8.8.8.8", "1.1.1.1"])` in `backend/src/server.ts`, apparently to control MongoDB DNS resolution. Treat it as an environment workaround rather than a random unused statement.
+- The frontend intentionally implements minimal routing with `window.location.pathname` instead of React Router.
 
 ## Watch out for
-
-- Do not add authenticated endpoints without `authenticateToken`, and do not trust client-supplied user IDs; account deletion demonstrates enforcing `request.userId === request.params.id` (`backend/src/routes/authRoutes.ts`).
-- Never expose `password` or return full Mongoose user documents without an explicit field selection/public mapping.
-- Preserve allowlisting for dynamic sort fields and directions. Do not pass arbitrary query parameters into `.sort()`; see `userSortFields` in `backend/src/routes/authRoutes.ts`.
-- Keep frontend and backend profile-image limits and MIME validation aligned; `express.json({ limit: "3mb" })` is intentionally larger than the 2 MB decoded image limit to accommodate base64 overhead (`backend/src/server.ts`).
-- Avoid changing the backend startup order: MongoDB must connect successfully before `app.listen` is called (`backend/src/server.ts`).
+- New protected endpoints must apply `authenticateToken`; destructive operations must verify ownership using `request.userId`.
+- Do not broaden user projections or return Mongoose user documents directly, which could expose `password`.
+- Preserve profile-image constraints across client and server: JPEG/PNG/WebP, maximum 2 MB, with the server-side validation in `backend/src/routes/authRoutes.ts` treated as authoritative.
+- Dynamic sorting must remain restricted to `name`, `email`, or `createdAt`; never pass arbitrary query values into `.sort()`.
+- Keep backend payload limits aligned with image handling (`express.json({ limit: "3mb" })` in `backend/src/server.ts`).
+- Investigate the root `package.json` description containing `<<<<<<< HEAD`; this appears to be an unresolved merge-conflict artifact.
