@@ -9,12 +9,6 @@ type LoginField = 'email' | 'password'
 type LoginErrors = Partial<Record<LoginField, string>>
 
 function Login() {
-  const dispatch = useDispatch<AppDispatch>()
-  const { status, error } = useSelector((state: RootState) => state.login)
-  const [values, setValues] = useState<LoginCredentials>({ email: '', password: '' })
-  const [errors, setErrors] = useState<LoginErrors>({})
-  const [showPassword, setShowPassword] = useState(false)
-
   useEffect(() => {
     if (status === 'succeeded') window.location.replace('/dashboard')
   }, [status])

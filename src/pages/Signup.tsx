@@ -25,11 +25,6 @@ function Signup() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   useEffect(() => {
-    if (status === 'succeeded') {
-      window.location.assign('/login')
-    }
-  }, [status])
-
   const validate = () => {
     const nextErrors: FormErrors = {}
     const requiredFields: Array<FormField> = [
