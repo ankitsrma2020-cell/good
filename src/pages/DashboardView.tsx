@@ -21,7 +21,12 @@ function DashboardView() {
   const [calendarOpen, setCalendarOpen] = useState(false)
   const [selectedDate, setSelectedDate] = useState(() => new Date())
   const [calendarMonth, setCalendarMonth] = useState(() => new Date())
-  const calendarRef = useR
+  const calendarRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (usersStatus === 'idle') dispatch(usersRequested({ sortBy: 'createdAt', order: 'desc' }))
+  }, [dispatch, usersStatus])
+
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
       if (calendarRef.current && !calendarRef.current.contains(event.target as Node)) setCalendarOpen(false)
